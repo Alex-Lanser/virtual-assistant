@@ -36,20 +36,37 @@ def get_token():
 def get_auth_header(token):
     return {"Authorization": "Bearer "+ token}
 
-def pauseSpotify():
+def pauseSong():
+    speak("Pausing music")
     global sp
     devices = sp.devices()
     for device in devices['devices']:
         if device['is_active']:
             sp.pause_playback(device['id'])
 
-def resumeSpotify():
+def resumeSong():
+    speak("Resuming music")
     global sp
     devices = sp.devices()
     for device in devices['devices']:
         if device['is_active']:
             sp.start_playback(device['id'])
 
+def currentlyPlaying():
+    global sp
+    title = sp.currently_playing()["item"]["name"]
+    artist = sp.currently_playing()["item"]["artists"][0]["name"]
+    speak(title + " by " + artist)
+
+def skipSong():
+    speak("Skipping song")
+    global sp
+    sp.next_track()
+
+def previousSong():
+    speak("Going to previous song")
+    global sp
+    sp.previous_track()
 def searchForArtist(token, artistName):
     speak("Searching music artist " + artistName)
     url = "https://api.spotify.com/v1/search"
@@ -124,6 +141,10 @@ def searchGoogle(search):
     url = "https://google.com.tr/search?q={}".format(search)
     webbrowser.open_new_tab(url)
     speak("Google searching " + search)
+
+def goToWebsite(url):
+    webbrowser.open_new_tab(url)
+    speak("Opening " + url)
         
 def run_virtual_assistant():
     auth_manager = SpotifyOAuth(client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri, scope=SCOPEs)
@@ -150,23 +171,30 @@ def run_virtual_assistant():
                 searchGoogle(query)
                 continue
             elif "pause music" in query:
-                speak("Pausing music")
-                pauseSpotify()
+                pauseSong()
                 continue
             elif "resume music" in query:
-                speak("Resuming music")
-                resumeSpotify()
+                resumeSong()
+                continue
+            elif "what song is currently playing" in query:
+                currentlyPlaying()
+                continue
+            elif "skip song" in query:
+                skipSong()
+                continue
+            elif "previous song" in query:
+                previousSong()
                 continue
             elif "search artist" in query:
                 query = query.replace("search artist", "")
                 result = searchForArtist(token, query)
-                continue
+                continue                       
             else:
                 speak("Sorry, I didn't quiet get that.")
         elif "thank you" in query:
             speak("You're welcome!")
         elif "goodbye luna" in query:
-            speak("Goodbye, Alex!")
+            speak("Goodbye Alex!")
             exit()
         else:
             print("Not proper saying")
